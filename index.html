@@ -319,7 +319,7 @@ footer{text-align:center;font-size:11px;letter-spacing:.3em;text-transform:upper
   const slotStatus = (dayKey, s, t) => {
     const mark = S.marks[dayKey] && S.marks[dayKey][s];
     if (mark) return { st: 'done', mark };
-    if (S.start && dayKey === S.start && s === 'm' && S.startSlot === 'e') return { st: 'na' };
+    if (s === 'm' && (S.start ? dayKey === S.start && S.startSlot === 'e' : t >= at(dayKey, SLOTS.m.to))) return { st: 'na' };
     const a = at(dayKey, SLOTS[s].from), b = at(dayKey, SLOTS[s].to);
     if (t < a) return { st: 'locked', opensIn: a - t, a };
     if (t < b) return { st: 'open', closesIn: b - t };
@@ -453,7 +453,7 @@ footer{text-align:center;font-size:11px;letter-spacing:.3em;text-transform:upper
     else if (info.st === 'done') body.innerHTML = `<div class="done-row"><div class="check">${tick}</div>Почистил зубы в <b>${hm(new Date(info.mark))}</b></div>`;
     else if (info.st === 'locked') body.innerHTML = `<div class="hint">Откроется в ${hm(info.a)}</div>`;
     else if (info.st === 'missed') body.innerHTML = '<div class="hint">Окно закрылось без отметки.</div>';
-    else if (info.st === 'na') body.innerHTML = '<div class="hint">Отсчёт начался с вечерней отметки.</div>';
+    else if (info.st === 'na') body.innerHTML = '<div class="hint">Старт с вечерней отметки.</div>';
     return el;
   }
 
