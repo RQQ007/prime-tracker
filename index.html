@@ -287,7 +287,8 @@ footer{text-align:center;font-size:11px;letter-spacing:.3em;text-transform:upper
     m: { title: 'Утро',  from: [6, 15], to: [10, 0] },
     e: { title: 'Вечер', from: [21, 0], to: [23, 0] }
   };
-  const KEY = 'prime-tracker-v1';
+  const KEY = 'prime-tracker-v2';
+  const FIRST_START = '2026-11-26';
   const $ = id => document.getElementById(id);
 
   // ---- time (with optional ?t=2026-11-25T07:00 override for testing) ----
@@ -313,7 +314,8 @@ footer{text-align:center;font-size:11px;letter-spacing:.3em;text-transform:upper
   // { start: 'YYYY-MM-DD' | null, startSlot: 'm'|'e', marks: { 'YYYY-MM-DD': { m: ts, e: ts } }, finished: bool, seenFinale: bool }
   const fresh = () => ({ start: null, startSlot: 'm', marks: {}, finished: false, seenFinale: false });
   let S;
-  try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch { S = fresh(); }
+  try { S = JSON.parse(localStorage.getItem(KEY)); } catch {}
+  if (!S) { S = fresh(); if (keyOf(now()) <= FIRST_START) S.start = FIRST_START; }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
 
   const slotStatus = (dayKey, s, t) => {
@@ -373,7 +375,8 @@ footer{text-align:center;font-size:11px;letter-spacing:.3em;text-transform:upper
     const today = keyOf(t);
     const brk = findBreak(t);
     const past = S.start && diffDays(S.start, today) >= DAYS;
-    const curKey = S.start ? (past ? addDays(S.start, DAYS - 1) : today) : today;
+    const pre = S.start && today < S.start;
+    const curKey = S.start ? (pre ? S.start : past ? addDays(S.start, DAYS - 1) : today) : today;
     const di = dayIndex(t);
 
     const states = ['m', 'e'].map(s => slotStatus(curKey, s, t));
@@ -394,6 +397,7 @@ footer{text-align:center;font-size:11px;letter-spacing:.3em;text-transform:upper
     const note = $('note');
     if (S.finished) note.innerHTML = 'Все <b>21 день</b> пройдены';
     else if (!S.start) note.innerHTML = 'Первая отметка запустит отсчёт';
+    else if (pre) { const sd = fromKey(S.start); note.innerHTML = `Старт <b>${sd.getDate()} ${months[sd.getMonth()]}</b> в 06:15`; }
     else note.innerHTML = `Отмечено <b>${done}</b> из ${req} · осталось ${DAYS - di} ${plural(DAYS - di, 'день', 'дня', 'дней')}`;
 
     // banner
